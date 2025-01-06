@@ -24,7 +24,7 @@ class SevenCrabsFeeder:
         """
         Login to ElevenLabs using email and password.
         """
-        async with httpx.AsyncClient(proxy="http://localhost:8080", verify=False) as client:
+        async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={ACCOUNT_KEY}",
                 json={
@@ -97,4 +97,20 @@ class SevenCrabsFeeder:
                     "Authorization": f"Bearer {self.token}",
                 },
             )
+            return response.json()
+
+    async def delete_article(self, read_id: str) -> dict:
+        """
+        Add text to ElevenLabs Reader.
+        """
+        if not self.token:
+            await self.login()
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"https://api.elevenlabs.io/v1/reader/reads/{read_id}",
+                headers={
+                    "Authorization": f"Bearer {self.token}",
+                },
+            )
+            response.raise_for_status()
             return response.json()

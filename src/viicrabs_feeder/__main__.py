@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 import re
 
+from rich.console import Console
+from rich.text import Text
 import typer
 from typing_extensions import Annotated
 import httpx
@@ -59,7 +61,12 @@ def add(
     if description:
         content["description"] = description
     feeder = SevenCrabsFeeder()
-    asyncio.run(feeder.add_article(**content))
+    result = asyncio.run(feeder.add_article(**content))
+    with Console() as console:
+        text = Text("Added an article to ElevenLabs Reader: ")
+        text.append(Text(result["read_id"], style="bold magenta"))
+        console.print(text)
+
 
 @app.command()
 def add_podcast(
@@ -73,7 +80,20 @@ def add_podcast(
     if description:
         content["description"] = description
     feeder = SevenCrabsFeeder()
-    asyncio.run(feeder.add_podcast(**content))
+    result = asyncio.run(feeder.add_podcast(**content))
+    with Console() as console:
+        text = Text("Added a podcast to ElevenLabs Reader: ")
+        text.append(Text(result["read_id"], style="bold magenta"))
+        console.print(text)
+
+@app.command()
+def delete(read_id: str):
+    feeder = SevenCrabsFeeder()
+    asyncio.run(feeder.delete_article(read_id))
+    with Console() as console:
+        text = Text("Deleted an article from ElevenLabs Reader: ")
+        text.append(Text(read_id, style="bold magenta"))
+        console.print(text)
 
 if __name__ == "__main__":
     app()
