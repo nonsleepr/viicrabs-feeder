@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: ElevenLabs Reader API
+  description: API for interacting with ElevenLabs Reader, providing access to app configuration, user settings, content, and more.
+  version: 1.0.0
+servers:
+  - url: https://api.elevenlabs.io
+    description: Production server
+paths:
+  /v1/reader/app_config:
+    get:
+      operationId: getAppConfig
+      summary: Retrieve application configuration.
+      description: Fetches the app configuration including default settings and URLs.
+      responses:
+        '200':
+          description: Application configuration details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  default_voice:
+                    type: string
+                  android_notification_channels:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  rn_min_app_version:
+                    type: string
+                  android_min_app_version:
+                    type: string
+                  ios_min_app_version:
+                    type: string
+                  report_problem_url:
+                    type: string
+                  copyright_takedown_url:
+                    type: string
+                  content_provider_waitlist_url:
+                    type: string
+                  player_buffer_max_length_seconds:
+                    type: integer
+                  player_buffer_min_length_seconds:
+                    type: integer
+  /v1/reader/user_config:
+    get:
+      operationId: getUserConfig
+      summary: Retrieve user-specific configuration.
+      description: Fetches user configuration settings like daily streak and playback preferences.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User configuration details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  default_voice_id:
+                    type: string
+                  daily_streak_minutes:
+                    type: integer
+                  playback_speed_rate:
+                    type: number
+                  player_font_size:
+                    type: integer
+                  player_font_family:
+                    type: string
+                  player_theme:
+                    type: string
+                  player_action_button:
+                    type: string
+                  genfm_language:
+                    type: string
+                    nullable: true
+  /v1/reader/home:
+    get:
+      operationId: getHomeContent
+      summary: Retrieve home content for the user.
+      description: Fetches sections of content displayed on the home screen.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Home content details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        type:
+                          type: string
+                        subtitle:
+                          type: string
+                          nullable: true
+                        aspect_ratio:
+                          type: number
+                          nullable: true
+                        background_image_url:
+                          type: string
+                          nullable: true
+                        background_video_url:
+                          type: string
+                          nullable: true
+                        deeplink:
+                          type: string
+                          nullable: true
+                        collections:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              title:
+                                type: string
+                              can_subscribe:
+                                type: boolean
+                              subtitle:
+                                type: string
+                              description:
+                                type: string
+                              url:
+                                type: string
+                              language:
+                                type: string
+                              image_url:
+                                type: string
+                              last_opened_at_unix:
+                                type: integer
+                                nullable: true
+                              updated_at_unix:
+                                type: integer
+                              has_unread:
+                                type: boolean
+                              category:
+                                type: string
+                              item_count:
+                                type: integer
+  /v1/reader/reads/changes:
+    get:
+      operationId: getReadsChanges
+      summary: Retrieve updates to reads.
+      description: Fetches changes to the user's reads based on a timestamp.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: last_updated_at_unix
+          in: query
+          required: true
+          description: Unix timestamp for the last update.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of reads and updates.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reads:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        read_id:
+                          type: string
+                        created_at_unix:
+                          type: integer
+                        updated_at_unix:
+                          type: integer
+                        word_count:
+                          type: integer
+                        char_count:
+                          type: integer
+                        title:
+                          type: string
+                        author:
+                          type: string
+                          nullable: true
+                        description:
+                          type: string
+                          nullable: true
+                  deleted_read_ids:
+                    type: array
+                    items:
+                      type: string
+                  has_more:
+                    type: boolean
+                  last_sort_id:
+                    type: string
+  /v1/reader/reads/u:{readId}/simple-html:
+    get:
+      operationId: getSimpleHtml
+      summary: Retrieve simplified HTML for a read.
+      description: Fetches simplified HTML content for the given read ID.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: readId
+          in: path
+          required: true
+          description: The unique ID of the read.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Simplified HTML content.
+          content:
+            text/html:
+              schema:
+                type: string
+  /v1/reader/reads/u:{readId}:
+    patch:
+      operationId: updateRead
+      summary: Update a read.
+      description: Updates properties of a read, such as last listened position.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: readId
+          in: path
+          required: true
+          description: The unique ID of the read.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                last_listened_char_offset:
+                  type: integer
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Read updated successfully.
+    delete:
+      operationId: deleteRead
+      summary: Delete a read.
+      description: Deletes a specific read by its ID.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: readId
+          in: path
+          required: true
+          description: The unique ID of the read.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Read deleted successfully.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
