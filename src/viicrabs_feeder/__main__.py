@@ -2,9 +2,11 @@ import asyncio
 import sys
 from pathlib import Path
 import re
+from datetime import datetime
 
 from rich.console import Console
 from rich.text import Text
+from rich.table import Table
 import typer
 from typing_extensions import Annotated
 import httpx
@@ -94,6 +96,18 @@ def delete(read_id: str):
         text = Text("Deleted an article from ElevenLabs Reader: ")
         text.append(Text(read_id, style="bold magenta"))
         console.print(text)
+
+@app.command()
+def list(start_date: datetime = None):
+    last_updated_at_unix = int(start_date.timestamp()) if start_date else 0
+    feeder = SevenCrabsFeeder()
+    result = asyncio.run(feeder.list_articles(last_updated_at_unix))
+    # Print a rich table with read_id, title, url, and date (derived from created_at_unix)
+    with Console() as console:
+        table = Table("Id", "Title", "URL", "Created", title="Articles")
+        for read in result["reads"]:
+            table.add_row(read["read_id"], read["title"], read["url"], datetime.fromtimestamp(read["created_at_unix"]).isoformat())
+        console.print(table)
 
 if __name__ == "__main__":
     app()

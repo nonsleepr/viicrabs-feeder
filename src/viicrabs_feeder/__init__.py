@@ -54,7 +54,7 @@ class SevenCrabsFeeder:
 
     async def add_article(self, content = None, **kwargs) -> dict:
         """
-        Add text to ElevenLabs Reader.
+        Add an article.
         """
         if not self.token:
             await self.login()
@@ -99,9 +99,25 @@ class SevenCrabsFeeder:
             )
             return response.json()
 
+    async def list_articles(self, last_updated_at_unix: int = 0) -> dict:
+        """
+        List articles.
+        """
+        if not self.token:
+            await self.login()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.elevenlabs.io/v1/reader/reads/changes?last_updated_at_unix={last_updated_at_unix}",
+                headers={
+                    "Authorization": f"Bearer {self.token}",
+                },
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def delete_article(self, read_id: str) -> dict:
         """
-        Add text to ElevenLabs Reader.
+        Delete an article.
         """
         if not self.token:
             await self.login()
