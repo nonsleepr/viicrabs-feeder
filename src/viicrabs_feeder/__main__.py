@@ -15,13 +15,15 @@ from . import SevenCrabsFeeder
 
 app = typer.Typer()
 
+
 def get_from_url(url: str) -> dict:
     response = httpx.get(url)
     if response.status_code != 200:
         raise typer.BadParameter(f"Failed to fetch content from {url}: {response.status_code}")
     # TODO: Simplify HTML, extract title and description, etc.
-    return {"content": response.text, "file_type": "text/html", "url": url, "source": "url"}
-    
+    return {"content": response.text, "file_type": "text/html", "url": url, "source": "website"}
+
+
 def parse_content(content: str, filename: str = None) -> dict:
     # TODO: Only support plain text for now
     result = {"content": content, "file_type": "text/plain"}
@@ -29,6 +31,7 @@ def parse_content(content: str, filename: str = None) -> dict:
         result["source"] = filename
     result["title"] = result["content"].split("\n")[0]
     return result
+
 
 def expand_content(content: str) -> dict:
     if content == "-":
@@ -44,12 +47,14 @@ def expand_content(content: str) -> dict:
     elif re.match(r"^[-_a-zA-Z0-9./]{1,100}$", content):
         raise typer.BadParameter(f"Looks like a filename, but it doesn't exist: {content}")
     return parse_content(content)
-    
+
+
 @app.command()
 def login(username: Annotated[str, typer.Option(help="ElevenLabs account email", prompt=True)],
           password: Annotated[str, typer.Option(help="ElevenLabs account password", prompt=True, hide_input=True)]):
     feeder = SevenCrabsFeeder(username, password)
     #asyncio.run(feeder.login())
+
 
 @app.command()
 def add(
@@ -88,6 +93,7 @@ def add_podcast(
         text.append(Text(result["read_id"], style="bold magenta"))
         console.print(text)
 
+
 @app.command()
 def delete(read_id: str):
     feeder = SevenCrabsFeeder()
@@ -96,6 +102,7 @@ def delete(read_id: str):
         text = Text("Deleted an article from ElevenLabs Reader: ")
         text.append(Text(read_id, style="bold magenta"))
         console.print(text)
+
 
 @app.command()
 def list(start_date: datetime = None):
@@ -108,6 +115,7 @@ def list(start_date: datetime = None):
         for read in result["reads"]:
             table.add_row(read["read_id"], read["title"], read["url"], datetime.fromtimestamp(read["created_at_unix"]).isoformat())
         console.print(table)
+
 
 if __name__ == "__main__":
     app()
