@@ -1,8 +1,8 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: ElevenLabs Reader API
   description: API for interacting with ElevenLabs Reader, providing access to app configuration, user settings, content, and more.
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: https://api.elevenlabs.io
     description: Production server
@@ -240,10 +240,22 @@ paths:
             schema:
               type: object
               properties:
-                last_listened_char_offset:
-                  type: integer
+                read_id:
+                  type: string
                 title:
                   type: string
+                description:
+                  type: string
+                author:
+                  type: string
+                source:
+                  type: string
+                language:
+                  type: string
+                article_image_url:
+                  type: string
+                last_listened_char_offset:
+                  type: integer
       responses:
         '200':
           description: Read updated successfully.
@@ -263,10 +275,123 @@ paths:
       responses:
         '204':
           description: Read deleted successfully.
+    get:
+      operationId: getRead
+      summary: Retrieve detailed information about a specific read.
+      description: Fetches detailed information about the specified read by its ID.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: readId
+          in: path
+          required: true
+          description: The unique ID of the read.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed information about the read.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  read_id:
+                    type: string
+                  created_at_unix:
+                    type: integer
+                  updated_at_unix:
+                    type: integer
+                  word_count:
+                    type: integer
+                  char_count:
+                    type: integer
+                  chapters:
+                    type: array
+                    items:
+                      type: object
+                  last_listened_char_offset:
+                    type: integer
+                  added_at_unix:
+                    type: integer
+                  source:
+                    type: string
+                  can_edit:
+                    type: boolean
+                  is_archived:
+                    type: boolean
+                  html_checksum:
+                    type: string
+                    nullable: true
+                  in_user_library:
+                    type: boolean
+                  can_make_podcast:
+                    type: boolean
+                  podcast_id:
+                    type: string
+                    nullable: true
+                  creation_status:
+                    type: string
+                  creation_progress:
+                    type: number
+                  url:
+                    type: string
+                    nullable: true
+                  source_field:
+                    type: string
+                  title:
+                    type: string
+                  author:
+                    type: string
+                  description:
+                    type: string
+                  article_image_url:
+                    type: string
+                  language:
+                    type: string
+  /v1/reader/reads/add:
+    post:
+      operationId: addRead
+      summary: Add a new read.
+      description: Uploads a new document or text as a read.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                from_document:
+                  type: string
+                  format: binary
+                  description: The file to upload.
+                title:
+                  type: string
+                  description: The title of the read.
+                source:
+                  type: string
+                  description: The source of the read (e.g., file, url, text).
+                url:
+                  type: string
+                  description: The URL of the content (if applicable).
+                description:
+                  type: string
+                  description: Description of the content.
+      responses:
+        '200':
+          description: Read added successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  read_id:
+                    type: string
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
 
